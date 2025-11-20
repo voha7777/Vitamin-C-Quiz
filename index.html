@@ -12,18 +12,24 @@
     
     <style>
       body { font-family: 'Inter', sans-serif; }
-      /* Simple animation for smooth transitions */
       .fade-in { animation: fadeIn 0.5s ease-in; }
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      
+      /* Custom scrollbar for cleaner look in iframes */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #f1f1f1; }
+      ::-webkit-scrollbar-thumb { background: #fb923c; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #f97316; }
     </style>
 
-    <!-- Import Map to allow standard React imports from CDN -->
+    <!-- Fixed Import Map: Strictly using React 18 to prevent version conflicts -->
     <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@18.2.0",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.292.0",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/"
   }
@@ -32,238 +38,6 @@
   </head>
   <body class="bg-orange-50 text-slate-800 antialiased min-h-screen flex flex-col">
     <div id="root" class="flex-grow flex flex-col"></div>
-
-    <!-- Application Logic -->
-    <script type="text/babel" data-type="module" data-presets="typescript,react">
-      import React, { useState } from 'react';
-      import { createRoot } from 'react-dom/client';
-      import { Citrus, BookOpen, CheckCircle2, XCircle, ArrowRight, Trophy, RotateCcw, ExternalLink } from 'lucide-react';
-
-      // --- TYPES & CONSTANTS ---
-      
-      const QUIZ_QUESTIONS = [
-        {
-          id: 1,
-          text: "What is the medical term for severe Vitamin C deficiency?",
-          options: ["Rickets", "Scurvy", "Beriberi", "Anemia"],
-          correctAnswerIndex: 1,
-          explanation: "Scurvy is the clinical condition resulting from a lack of vitamin C (ascorbic acid) in the diet."
-        },
-        {
-          id: 2,
-          text: "Vitamin C is crucial for the synthesis of which structural protein?",
-          options: ["Keratin", "Insulin", "Collagen", "Hemoglobin"],
-          correctAnswerIndex: 2,
-          explanation: "Vitamin C helps produce collagen, a protein essential for healthy skin, cartilage, tendons, ligaments, and blood vessels."
-        },
-        {
-          id: 3,
-          text: "Which of the following is an early symptom of Vitamin C deficiency?",
-          options: ["Rapid weight gain", "Extreme thirst", "Bleeding gums and fatigue", "Blurred vision"],
-          correctAnswerIndex: 2,
-          explanation: "Early signs often include fatigue, weakness, and inflamed or bleeding gums due to weakened connective tissue."
-        },
-        {
-          id: 4,
-          text: "Which group involves lifestyle factors that increase the risk of Vitamin C deficiency?",
-          options: ["Athletes", "Smokers", "Vegetarians", "Office workers"],
-          correctAnswerIndex: 1,
-          explanation: "Smoking increases oxidative stress, causing the body to deplete Vitamin C faster than non-smokers."
-        },
-        {
-          id: 5,
-          text: "Since the human body cannot synthesize Vitamin C, how must it be obtained?",
-          options: ["Through sunlight exposure", "Through diet or supplementation", "By sleeping more", "It is stored in the liver for years"],
-          correctAnswerIndex: 1,
-          explanation: "Humans are one of the few mammals that cannot make their own Vitamin C, so it must be consumed via food or supplements."
-        }
-      ];
-
-      const QuizStatus = {
-        START: 'START',
-        PLAYING: 'PLAYING',
-        FINISHED: 'FINISHED'
-      };
-
-      // --- COMPONENTS ---
-
-      const Button = ({ children, variant = 'primary', fullWidth = false, className = '', ...props }) => {
-        const baseStyles = "px-6 py-3 rounded-xl font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2";
-        const variants = {
-          primary: "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30",
-          secondary: "bg-white hover:bg-orange-50 text-orange-600 border-2 border-orange-100",
-          outline: "bg-transparent border-2 border-slate-200 text-slate-600 hover:border-orange-400 hover:text-orange-500"
-        };
-        return (
-          <button className={`${baseStyles} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`} {...props}>
-            {children}
-          </button>
-        );
-      };
-
-      const StartScreen = ({ onStart }) => {
-        return (
-          <div className="flex flex-col items-center text-center space-y-8 max-w-lg mx-auto p-6 fade-in">
-            <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
-              <Citrus className="w-12 h-12 text-orange-500" />
-            </div>
-            <div className="space-y-4">
-              <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Do You Know Vitamin C?</h1>
-              <p className="text-lg text-slate-600 leading-relaxed">
-                Test your understanding of Ascorbic Acid, Scurvy, and why your body needs this vital nutrient. Based on Remedy Nutrition's health insights.
-              </p>
-            </div>
-            <div className="w-full space-y-3 pt-4">
-              <Button onClick={onStart} fullWidth className="text-lg">Start Quiz</Button>
-              <a href="https://remedysnutrition.com/blogs/vitamins/understanding-vitamin-c-deficiency" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-orange-600 font-medium hover:underline mt-4">
-                <BookOpen size={16} /> Read the Article First
-              </a>
-            </div>
-          </div>
-        );
-      };
-
-      const QuizCard = ({ question, questionIndex, totalQuestions, onAnswer, onNext }) => {
-        const [selectedOption, setSelectedOption] = useState(null);
-        const [isSubmitted, setIsSubmitted] = useState(false);
-
-        const handleSelect = (index) => {
-          if (isSubmitted) return;
-          setSelectedOption(index);
-        };
-
-        const handleSubmit = () => {
-          if (selectedOption === null) return;
-          setIsSubmitted(true);
-          onAnswer(selectedOption);
-        };
-
-        const handleNext = () => {
-          setSelectedOption(null);
-          setIsSubmitted(false);
-          onNext();
-        };
-
-        const isCorrect = selectedOption === question.correctAnswerIndex;
-
-        return (
-          <div className="w-full max-w-xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 fade-in">
-            <div className="w-full h-2 bg-slate-100">
-              <div className="h-full bg-orange-500 transition-all duration-500 ease-out" style={{ width: `${((questionIndex + 1) / totalQuestions) * 100}%` }} />
-            </div>
-            <div className="p-6 sm:p-8">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-sm font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">
-                  Question {questionIndex + 1} / {totalQuestions}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-8">{question.text}</h2>
-              <div className="space-y-3">
-                {question.options.map((option, idx) => {
-                  let optionStyles = "border-slate-200 hover:border-orange-300 hover:bg-orange-50";
-                  let icon = null;
-                  if (isSubmitted) {
-                    if (idx === question.correctAnswerIndex) {
-                      optionStyles = "border-green-500 bg-green-50 text-green-700 font-medium";
-                      icon = <CheckCircle2 className="text-green-500 w-5 h-5" />;
-                    } else if (idx === selectedOption) {
-                      optionStyles = "border-red-500 bg-red-50 text-red-700";
-                      icon = <XCircle className="text-red-500 w-5 h-5" />;
-                    } else {
-                      optionStyles = "opacity-50 border-slate-100";
-                    }
-                  } else if (selectedOption === idx) {
-                    optionStyles = "border-orange-500 bg-orange-50 ring-1 ring-orange-500";
-                  }
-                  return (
-                    <button key={idx} onClick={() => handleSelect(idx)} disabled={isSubmitted} className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex justify-between items-center group ${optionStyles}`}>
-                      <span>{option}</span>
-                      {icon}
-                    </button>
-                  );
-                })}
-              </div>
-              {isSubmitted && (
-                <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in slide-in-from-bottom-2">
-                  <p className="font-semibold text-slate-900 mb-1">{isCorrect ? "Correct!" : "Not quite right."}</p>
-                  <p className="text-slate-600 text-sm leading-relaxed">{question.explanation}</p>
-                </div>
-              )}
-              <div className="mt-8">
-                {!isSubmitted ? (
-                  <Button onClick={handleSubmit} fullWidth disabled={selectedOption === null} className={selectedOption === null ? "opacity-50 cursor-not-allowed" : ""}>Check Answer</Button>
-                ) : (
-                  <Button onClick={handleNext} fullWidth className="flex items-center justify-center gap-2">Next Question <ArrowRight size={20} /></Button>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      };
-
-      const ResultScreen = ({ score, total, onRetry }) => {
-        const percentage = Math.round((score / total) * 100);
-        let message = "", subMessage = "";
-        
-        if (percentage === 100) { message = "Vitamin C Expert!"; subMessage = "You have a perfect understanding of deficiency symptoms and prevention."; }
-        else if (percentage >= 80) { message = "Great Job!"; subMessage = "You know your nutrition well. Just a few details to brush up on."; }
-        else if (percentage >= 50) { message = "Good Effort"; subMessage = "You have the basics down, but there's more to learn about Scurvy."; }
-        else { message = "Time to Study"; subMessage = "It looks like you might be at risk of a knowledge deficiency!"; }
-
-        return (
-          <div className="w-full max-w-lg mx-auto bg-white rounded-3xl shadow-xl p-8 text-center border border-slate-100 fade-in">
-            <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Trophy className="w-10 h-10 text-yellow-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">{message}</h2>
-            <p className="text-slate-500 mb-8">{subMessage}</p>
-            <div className="bg-slate-50 rounded-2xl p-6 mb-8">
-              <p className="text-sm text-slate-500 uppercase tracking-wider font-semibold mb-1">Your Score</p>
-              <div className="text-5xl font-black text-orange-500">{percentage}%</div>
-              <p className="text-slate-400 mt-2">{score} out of {total} correct</p>
-            </div>
-            <div className="space-y-3">
-              <Button onClick={onRetry} fullWidth variant="primary"><span className="flex items-center justify-center gap-2"><RotateCcw size={18} /> Try Again</span></Button>
-              <a href="https://remedysnutrition.com/blogs/vitamins/understanding-vitamin-c-deficiency" target="_blank" rel="noopener noreferrer" className="block w-full">
-                <Button fullWidth variant="outline"><span className="flex items-center justify-center gap-2">Read Full Article <ExternalLink size={18} /></span></Button>
-              </a>
-            </div>
-          </div>
-        );
-      };
-
-      const App = () => {
-        const [gameState, setGameState] = useState({ status: QuizStatus.START, currentQuestionIndex: 0, score: 0, answers: [] });
-
-        const startQuiz = () => setGameState({ status: QuizStatus.PLAYING, currentQuestionIndex: 0, score: 0, answers: [] });
-
-        const handleAnswer = (selectedIndex) => {
-          const currentQuestion = QUIZ_QUESTIONS[gameState.currentQuestionIndex];
-          const isCorrect = selectedIndex === currentQuestion.correctAnswerIndex;
-          setGameState(prev => ({ ...prev, score: isCorrect ? prev.score + 1 : prev.score, answers: [...prev.answers, selectedIndex] }));
-        };
-
-        const nextQuestion = () => {
-          if (gameState.currentQuestionIndex < QUIZ_QUESTIONS.length - 1) {
-            setGameState(prev => ({ ...prev, currentQuestionIndex: prev.currentQuestionIndex + 1 }));
-          } else {
-            setGameState(prev => ({ ...prev, status: QuizStatus.FINISHED }));
-          }
-        };
-
-        return (
-          <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 py-12 px-4 flex items-center justify-center">
-            {gameState.status === QuizStatus.START && <StartScreen onStart={startQuiz} />}
-            {gameState.status === QuizStatus.PLAYING && (
-              <QuizCard question={QUIZ_QUESTIONS[gameState.currentQuestionIndex]} questionIndex={gameState.currentQuestionIndex} totalQuestions={QUIZ_QUESTIONS.length} onAnswer={handleAnswer} onNext={nextQuestion} />
-            )}
-            {gameState.status === QuizStatus.FINISHED && <ResultScreen score={gameState.score} total={QUIZ_QUESTIONS.length} onRetry={startQuiz} />}
-          </div>
-        );
-      };
-
-      const root = createRoot(document.getElementById('root'));
-      root.render(<React.StrictMode><App /></React.StrictMode>);
-    </script>
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
