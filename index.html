@@ -6,38 +6,23 @@
     <title>Vitamin C Knowledge Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Babel for compiling React in the browser -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
     <style>
-      body { font-family: 'Inter', sans-serif; }
-      .fade-in { animation: fadeIn 0.5s ease-in; }
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      
-      /* Custom scrollbar for cleaner look in iframes */
-      ::-webkit-scrollbar { width: 8px; }
-      ::-webkit-scrollbar-track { background: #f1f1f1; }
-      ::-webkit-scrollbar-thumb { background: #fb923c; border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: #f97316; }
+      body {
+        font-family: 'Inter', sans-serif;
+      }
     </style>
-
-    <!-- Fixed Import Map: Strictly using React 18 to prevent version conflicts -->
-    <script type="importmap">
+  <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "lucide-react": "https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
   }
 }
 </script>
-  </head>
+</head>
   <body class="bg-orange-50 text-slate-800 antialiased min-h-screen flex flex-col">
     <div id="root" class="flex-grow flex flex-col"></div>
-    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
